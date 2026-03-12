@@ -1376,13 +1376,7 @@ macro_rules! flags {
         impl const ::core::convert::From<$n> for $crate::FlagSet<$n> {
             #[inline]
             fn from(value: $n) -> Self {
-                match value {
-                    $($n::$k => {
-                        let rebinding = $v;
-                        // SAFETY: macro-generated code: the bits are valid.
-                        unsafe { Self::new_unchecked(rebinding) }
-                    }),*
-                }
+                value.into_flagset()
             }
         }
 
@@ -1437,6 +1431,19 @@ macro_rules! flags {
             #[inline]
             fn rem(self, rhs: R) -> Self::Output {
                 $crate::FlagSet::from(self) % rhs
+            }
+        }
+
+        impl $n {
+            #[inline]
+            fn into_flagset(self) -> $crate::FlagSet<$n> {
+                match value {
+                    $($n::$k => {
+                        let rebinding = $v;
+                        // SAFETY: macro-generated code: the bits are valid.
+                        unsafe { Self::new_unchecked(rebinding) }
+                    }),*
+                }
             }
         }
 
