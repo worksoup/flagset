@@ -1437,7 +1437,7 @@ macro_rules! flags {
         impl $n {
             #[inline]
             pub const fn into_flagset(self) -> $crate::FlagSet<$n> {
-                match value {
+                match self {
                     $($n::$k => {
                         let rebinding = $v;
                         // SAFETY: macro-generated code: the bits are valid.
