@@ -1441,7 +1441,7 @@ macro_rules! flags {
                     $($n::$k => {
                         let rebinding = $v;
                         // SAFETY: macro-generated code: the bits are valid.
-                        unsafe { Self::new_unchecked(rebinding) }
+                        unsafe { $crate::FlagSet::<$n>::new_unchecked(rebinding) }
                     }),*
                 }
             }
