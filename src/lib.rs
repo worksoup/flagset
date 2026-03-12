@@ -247,6 +247,15 @@ appropriate `repr` attribute:
 #![warn(clippy::all)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![feature(const_trait_impl)]
+#![feature(const_iter)]
+#![feature(const_convert)]
+#![feature(const_clone)]
+#![feature(const_cmp)]
+#![feature(const_ops)]
+#![feature(const_default)]
+#![feature(derive_const)]
+#![feature(const_option_ops)]
 
 use core::fmt::{Debug, Formatter, Result};
 use core::ops::*;
@@ -281,7 +290,7 @@ impl core::fmt::Display for InvalidBits {
 impl std::error::Error for InvalidBits {}
 
 #[doc(hidden)]
-pub trait Flags:
+pub const trait Flags:
     Copy
     + Clone
     + Debug
@@ -324,14 +333,31 @@ pub trait Flags:
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Eq, Hash)]
+#[derive(Copy, Hash)]
 pub struct FlagSet<F: Flags>(F::Type);
 
+impl<F: Flags> const Clone for FlagSet<F> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<F: Flags> const Eq for FlagSet<F> where F::Type: [const] Eq {}
+
 #[doc(hidden)]
-#[derive(Copy, Clone)]
+#[derive(Copy)]
 pub struct Iter<F: Flags>(FlagSet<F>, usize);
 
-impl<F: Flags> Iterator for Iter<F> {
+impl<F: Flags> const Clone for Iter<F> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<F: Flags + [const] Into<FlagSet<F>>> const Iterator for Iter<F>
+where
+    F::Type: [const] PartialEq + [const] BitAnd,
+{
     type Item = F;
 
     #[inline]
@@ -349,7 +375,7 @@ impl<F: Flags> Iterator for Iter<F> {
     }
 }
 
-impl<F: Flags> IntoIterator for FlagSet<F> {
+impl<F: Flags> const IntoIterator for FlagSet<F> {
     type Item = F;
     type IntoIter = Iter<F>;
 
@@ -391,21 +417,24 @@ impl<F: Flags> Debug for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Copy + Into<FlagSet<F>>> PartialEq<R> for FlagSet<F> {
+impl<F: Flags, R: Copy + [const] Into<FlagSet<F>>> const PartialEq<R> for FlagSet<F>
+where
+    F::Type: [const] PartialEq,
+{
     #[inline]
     fn eq(&self, rhs: &R) -> bool {
         self.0 == (*rhs).into().0
     }
 }
 
-impl<F: Flags> AsRef<F::Type> for FlagSet<F> {
+impl<F: Flags> const AsRef<F::Type> for FlagSet<F> {
     #[inline]
     fn as_ref(&self) -> &F::Type {
         &self.0
     }
 }
 
-impl<F: Flags> From<Option<FlagSet<F>>> for FlagSet<F> {
+impl<F: Flags> const From<Option<FlagSet<F>>> for FlagSet<F> {
     /// Converts from `Option<FlagSet<F>>` to `FlagSet<F>`.
     ///
     /// Most notably, this allows for the use of `None` in many places to
@@ -436,7 +465,7 @@ impl<F: Flags> From<Option<FlagSet<F>>> for FlagSet<F> {
     }
 }
 
-impl<F: Flags> Default for FlagSet<F> {
+impl<F: Flags> const Default for FlagSet<F> {
     /// Creates a new, empty FlagSet.
     ///
     /// ```
@@ -463,7 +492,10 @@ impl<F: Flags> Default for FlagSet<F> {
     }
 }
 
-impl<F: Flags> Not for FlagSet<F> {
+impl<F: Flags> const Not for FlagSet<F>
+where
+    F::Type: [const] Not,
+{
     type Output = Self;
 
     /// Calculates the complement of the current set.
@@ -496,7 +528,10 @@ impl<F: Flags> Not for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> BitAnd<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitAnd<R> for FlagSet<F>
+where
+    F::Type: [const] BitAnd,
+{
     type Output = Self;
 
     /// Calculates the intersection of the current set and the specified flags.
@@ -525,7 +560,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> BitAnd<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> BitAndAssign<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitAndAssign<R> for FlagSet<F>
+where
+    F::Type: [const] BitAndAssign,
+{
     /// Assigns the intersection of the current set and the specified flags.
     ///
     /// ```
@@ -554,7 +592,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> BitAndAssign<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> BitOr<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitOr<R> for FlagSet<F>
+where
+    F::Type: [const] BitOr,
+{
     type Output = Self;
 
     /// Calculates the union of the current set with the specified flags.
@@ -581,7 +622,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> BitOr<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> BitOrAssign<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitOrAssign<R> for FlagSet<F>
+where
+    F::Type: [const] BitOrAssign,
+{
     /// Assigns the union of the current set with the specified flags.
     ///
     /// ```
@@ -610,7 +654,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> BitOrAssign<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> BitXor<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitXor<R> for FlagSet<F>
+where
+    F::Type: [const] BitXor,
+{
     type Output = Self;
 
     /// Calculates the current set with the specified flags toggled.
@@ -639,7 +686,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> BitXor<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> BitXorAssign<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitXorAssign<R> for FlagSet<F>
+where
+    F::Type: [const] BitXorAssign,
+{
     /// Assigns the current set with the specified flags toggled.
     ///
     /// ```
@@ -668,7 +718,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> BitXorAssign<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> Sub<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const Sub<R> for FlagSet<F>
+where
+    F::Type: [const] BitAnd + [const] Not,
+{
     type Output = Self;
 
     /// Calculates set difference (the current set without the specified flags).
@@ -694,7 +747,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> Sub<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> SubAssign<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const SubAssign<R> for FlagSet<F>
+where
+    F::Type: [const] BitAndAssign + [const] Not,
+{
     /// Assigns set difference (the current set without the specified flags).
     ///
     /// ```
@@ -718,7 +774,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> SubAssign<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> Rem<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const Rem<R> for FlagSet<F>
+where
+    F::Type: [const] BitOr + [const] BitAnd + [const] Not,
+{
     type Output = Self;
 
     /// Calculates the symmetric difference between two sets.
@@ -748,7 +807,10 @@ impl<F: Flags, R: Into<FlagSet<F>>> Rem<R> for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Into<FlagSet<F>>> RemAssign<R> for FlagSet<F> {
+impl<F: Flags, R: [const] Into<FlagSet<F>>> const RemAssign<R> for FlagSet<F>
+where
+    F::Type: [const] BitOr + [const] BitAnd + [const] Not,
+{
     /// Assigns the symmetric difference between two sets.
     ///
     /// The symmetric difference between two sets is the set of all flags
@@ -825,7 +887,11 @@ impl<F: Flags> FlagSet<F> {
     /// assert_eq!(FlagSet::<Flag>::new(0b10101), Err(flagset::InvalidBits)); // Unknown
     /// ```
     #[inline]
-    pub fn new(bits: F::Type) -> core::result::Result<Self, InvalidBits> {
+    pub const fn new(bits: F::Type) -> core::result::Result<Self, InvalidBits>
+    where
+        F: [const] Into<Self>,
+        F::Type: [const] PartialEq + [const] BitAnd + [const] BitOrAssign,
+    {
         if Self::new_truncated(bits).0 == bits {
             return Ok(FlagSet(bits));
         }
@@ -852,7 +918,11 @@ impl<F: Flags> FlagSet<F> {
     /// assert_eq!(set.bits(), 0b00101);            // Has neither.
     /// ```
     #[inline]
-    pub fn new_truncated(bits: F::Type) -> Self {
+    pub const fn new_truncated(bits: F::Type) -> Self
+    where
+        F: [const] Into<Self>,
+        F::Type: [const] PartialEq + [const] BitAnd + [const] BitOrAssign,
+    {
         let mut set = Self::default();
 
         for flag in FlagSet::<F>(bits) {
@@ -936,10 +1006,18 @@ impl<F: Flags> FlagSet<F> {
     /// assert!(set.contains(Flag::Baz));
     /// ```
     #[inline]
-    pub fn full() -> Self {
+    pub const fn full() -> Self
+    where
+        F: [const] Into<FlagSet<F>>,
+        F::Type: [const] BitOrAssign,
+    {
         let mut set = Self::default();
-        for f in F::LIST {
-            set |= *f
+        let len = F::LIST.len();
+        let mut idx = 0;
+        while idx < len {
+            let f = F::LIST[idx];
+            set |= f;
+            idx += 1;
         }
         set
     }
@@ -961,7 +1039,7 @@ impl<F: Flags> FlagSet<F> {
     /// assert_eq!(set.bits(), 0b0101u16);
     /// ```
     #[inline]
-    pub fn bits(self) -> F::Type {
+    pub const fn bits(self) -> F::Type {
         self.0
     }
 
@@ -985,7 +1063,10 @@ impl<F: Flags> FlagSet<F> {
     /// assert!(set.is_empty());
     /// ```
     #[inline]
-    pub fn is_empty(self) -> bool {
+    pub const fn is_empty(self) -> bool
+    where
+        F::Type: [const] PartialEq,
+    {
         self == Self::default()
     }
 
@@ -1009,7 +1090,11 @@ impl<F: Flags> FlagSet<F> {
     /// assert!(set.is_full());
     /// ```
     #[inline]
-    pub fn is_full(self) -> bool {
+    pub const fn is_full(self) -> bool
+    where
+        F: [const] Into<FlagSet<F>>,
+        F::Type: [const] PartialEq + [const] BitOrAssign,
+    {
         self == Self::full()
     }
 
@@ -1032,7 +1117,10 @@ impl<F: Flags> FlagSet<F> {
     /// assert!(set.is_disjoint(Flag::Baz));
     /// ```
     #[inline]
-    pub fn is_disjoint(self, rhs: impl Into<FlagSet<F>>) -> bool {
+    pub const fn is_disjoint(self, rhs: impl [const] Into<FlagSet<F>>) -> bool
+    where
+        F::Type: [const] PartialEq + [const] BitAnd,
+    {
         self & rhs == Self::default()
     }
 
@@ -1055,7 +1143,10 @@ impl<F: Flags> FlagSet<F> {
     /// assert!(!set.contains(Flag::Foo | Flag::Bar | Flag::Baz));
     /// ```
     #[inline]
-    pub fn contains(self, rhs: impl Into<FlagSet<F>>) -> bool {
+    pub const fn contains(self, rhs: impl [const] Into<FlagSet<F>>) -> bool
+    where
+        F::Type: [const] PartialEq + [const] BitAnd,
+    {
         let rhs = rhs.into();
         self & rhs == rhs
     }
@@ -1269,10 +1360,11 @@ macro_rules! flags {
     // Entrypoint for enumerations with values.
     ($(#[$m:meta])* $p:vis enum $n:ident: $t:ty { $($(#[$a:meta])*$k:ident = $v:expr),* $(,)* } $($next:tt)*) => {
         $(#[$m])*
-        #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+        #[derive(Copy, Debug)]
+        #[derive_const(Clone, PartialEq, Eq)]
         $p enum $n { $($(#[$a])* $k),* }
 
-        impl $crate::Flags for $n {
+        impl const $crate::Flags for $n {
             type Type = $t;
 
             const ZERO: Self::Type = 0;
@@ -1280,18 +1372,20 @@ macro_rules! flags {
             const LIST: &'static [Self] = &[$($n::$k),*];
         }
 
-        impl ::core::convert::From<$n> for $crate::FlagSet<$n> {
+        impl const ::core::convert::From<$n> for $crate::FlagSet<$n> {
             #[inline]
             fn from(value: $n) -> Self {
-                unsafe {
-                    match value {
-                        $($n::$k => Self::new_unchecked($v)),*
-                    }
+                match value {
+                    $($n::$k => {
+                        let rebinding = $v;
+                        // SAFETY: macro-generated code: the bits are valid.
+                        unsafe { Self::new_unchecked(rebinding) }
+                    }),*
                 }
             }
         }
 
-        impl ::core::ops::Not for $n {
+        impl const ::core::ops::Not for $n {
             type Output = $crate::FlagSet<$n>;
 
             #[inline]
@@ -1300,7 +1394,7 @@ macro_rules! flags {
             }
         }
 
-        impl<R: ::core::convert::Into<$crate::FlagSet<$n>>> ::core::ops::BitAnd<R> for $n {
+        impl<R: [const] ::core::convert::Into<$crate::FlagSet<$n>>> const ::core::ops::BitAnd<R> for $n {
             type Output = $crate::FlagSet<$n>;
 
             #[inline]
@@ -1309,7 +1403,7 @@ macro_rules! flags {
             }
         }
 
-        impl<R: ::core::convert::Into<$crate::FlagSet<$n>>> ::core::ops::BitOr<R> for $n {
+        impl<R: [const] ::core::convert::Into<$crate::FlagSet<$n>>> const ::core::ops::BitOr<R> for $n {
             type Output = $crate::FlagSet<$n>;
 
             #[inline]
@@ -1318,7 +1412,7 @@ macro_rules! flags {
             }
         }
 
-        impl<R: ::core::convert::Into<$crate::FlagSet<$n>>> ::core::ops::BitXor<R> for $n {
+        impl<R: [const] ::core::convert::Into<$crate::FlagSet<$n>>> const ::core::ops::BitXor<R> for $n {
             type Output = $crate::FlagSet<$n>;
 
             #[inline]
@@ -1327,7 +1421,7 @@ macro_rules! flags {
             }
         }
 
-        impl<R: ::core::convert::Into<$crate::FlagSet<$n>>> ::core::ops::Sub<R> for $n {
+        impl<R: [const] ::core::convert::Into<$crate::FlagSet<$n>>> const ::core::ops::Sub<R> for $n {
             type Output = $crate::FlagSet<$n>;
 
             #[inline]
@@ -1336,7 +1430,7 @@ macro_rules! flags {
             }
         }
 
-        impl<R: ::core::convert::Into<$crate::FlagSet<$n>>> ::core::ops::Rem<R> for $n {
+        impl<R: [const] ::core::convert::Into<$crate::FlagSet<$n>>> const ::core::ops::Rem<R> for $n {
             type Output = $crate::FlagSet<$n>;
 
             #[inline]
