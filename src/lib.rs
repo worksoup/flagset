@@ -1436,7 +1436,7 @@ macro_rules! flags {
 
         impl $n {
             #[inline]
-            fn into_flagset(self) -> $crate::FlagSet<$n> {
+            pub fn into_flagset(self) -> $crate::FlagSet<$n> {
                 match value {
                     $($n::$k => {
                         let rebinding = $v;
