@@ -276,7 +276,8 @@ use core::ops::*;
 /// assert_eq!(FlagSet::<Flag>::new(0b01101), Err(flagset::InvalidBits)); // Invalid
 /// assert_eq!(FlagSet::<Flag>::new(0b10101), Err(flagset::InvalidBits)); // Unknown
 /// ```
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Copy, Debug)]
+#[derive_const(Clone, Eq, PartialEq)]
 pub struct InvalidBits;
 
 impl core::fmt::Display for InvalidBits {
