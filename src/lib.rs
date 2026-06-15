@@ -1445,6 +1445,14 @@ macro_rules! flags {
                     }),*
                 }
             }
+
+            #[inline]
+            pub const fn from_bits(bits: $t) -> Option<Self> {
+                match bits {
+                    $($v => Some($n::$k),)*
+                    _ => None
+                }
+            }
         }
 
         $crate::flags! { $($next)* }
