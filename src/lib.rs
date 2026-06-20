@@ -337,25 +337,25 @@ pub const trait Flags:
 #[derive(Copy, Hash)]
 pub struct FlagSet<F: Flags>(F::Type);
 
-impl<F: Flags> const Clone for FlagSet<F> {
+const impl<F: Flags> Clone for FlagSet<F> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<F: Flags> const Eq for FlagSet<F> where F::Type: [const] Eq {}
+const impl<F: Flags> Eq for FlagSet<F> where F::Type: [const] Eq {}
 
 #[doc(hidden)]
 #[derive(Copy)]
 pub struct Iter<F: Flags>(FlagSet<F>, usize);
 
-impl<F: Flags> const Clone for Iter<F> {
+const impl<F: Flags> Clone for Iter<F> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<F: Flags + [const] Into<FlagSet<F>>> const Iterator for Iter<F>
+const impl<F: Flags + [const] Into<FlagSet<F>>> Iterator for Iter<F>
 where
     F::Type: [const] PartialEq + [const] BitAnd,
 {
@@ -376,7 +376,7 @@ where
     }
 }
 
-impl<F: Flags> const IntoIterator for FlagSet<F> {
+const impl<F: Flags> IntoIterator for FlagSet<F> {
     type Item = F;
     type IntoIter = Iter<F>;
 
@@ -418,7 +418,7 @@ impl<F: Flags> Debug for FlagSet<F> {
     }
 }
 
-impl<F: Flags, R: Copy + [const] Into<FlagSet<F>>> const PartialEq<R> for FlagSet<F>
+const impl<F: Flags, R: Copy + [const] Into<FlagSet<F>>> PartialEq<R> for FlagSet<F>
 where
     F::Type: [const] PartialEq,
 {
@@ -428,14 +428,14 @@ where
     }
 }
 
-impl<F: Flags> const AsRef<F::Type> for FlagSet<F> {
+const impl<F: Flags> AsRef<F::Type> for FlagSet<F> {
     #[inline]
     fn as_ref(&self) -> &F::Type {
         &self.0
     }
 }
 
-impl<F: Flags> const From<Option<FlagSet<F>>> for FlagSet<F> {
+const impl<F: Flags> From<Option<FlagSet<F>>> for FlagSet<F> {
     /// Converts from `Option<FlagSet<F>>` to `FlagSet<F>`.
     ///
     /// Most notably, this allows for the use of `None` in many places to
@@ -466,7 +466,7 @@ impl<F: Flags> const From<Option<FlagSet<F>>> for FlagSet<F> {
     }
 }
 
-impl<F: Flags> const Default for FlagSet<F> {
+const impl<F: Flags> Default for FlagSet<F> {
     /// Creates a new, empty FlagSet.
     ///
     /// ```
@@ -493,7 +493,7 @@ impl<F: Flags> const Default for FlagSet<F> {
     }
 }
 
-impl<F: Flags> const Not for FlagSet<F>
+const impl<F: Flags> Not for FlagSet<F>
 where
     F::Type: [const] Not,
 {
@@ -529,7 +529,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitAnd<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> BitAnd<R> for FlagSet<F>
 where
     F::Type: [const] BitAnd,
 {
@@ -561,7 +561,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitAndAssign<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> BitAndAssign<R> for FlagSet<F>
 where
     F::Type: [const] BitAndAssign,
 {
@@ -593,7 +593,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitOr<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> BitOr<R> for FlagSet<F>
 where
     F::Type: [const] BitOr,
 {
@@ -623,7 +623,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitOrAssign<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> BitOrAssign<R> for FlagSet<F>
 where
     F::Type: [const] BitOrAssign,
 {
@@ -655,7 +655,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitXor<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> BitXor<R> for FlagSet<F>
 where
     F::Type: [const] BitXor,
 {
@@ -687,7 +687,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const BitXorAssign<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> BitXorAssign<R> for FlagSet<F>
 where
     F::Type: [const] BitXorAssign,
 {
@@ -719,7 +719,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const Sub<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> Sub<R> for FlagSet<F>
 where
     F::Type: [const] BitAnd + [const] Not,
 {
@@ -748,7 +748,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const SubAssign<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> SubAssign<R> for FlagSet<F>
 where
     F::Type: [const] BitAndAssign + [const] Not,
 {
@@ -775,7 +775,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const Rem<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> Rem<R> for FlagSet<F>
 where
     F::Type: [const] BitOr + [const] BitAnd + [const] Not,
 {
@@ -808,7 +808,7 @@ where
     }
 }
 
-impl<F: Flags, R: [const] Into<FlagSet<F>>> const RemAssign<R> for FlagSet<F>
+const impl<F: Flags, R: [const] Into<FlagSet<F>>> RemAssign<R> for FlagSet<F>
 where
     F::Type: [const] BitOr + [const] BitAnd + [const] Not,
 {
@@ -1445,7 +1445,19 @@ macro_rules! flags {
                     }),*
                 }
             }
+        }
 
+        $crate::flags! { $($next)* }
+    };
+
+    (@with_from_bits_fn; $(#[$m:meta])* $p:vis enum $n:ident: $t:ty { $($(#[$a:meta])* $k:ident),+ $(,)* } $($next:tt)*) => {
+        $crate::flags! { @with_from_bits_fn; $(#[$m])* $p enum $n: $t { $($(#[$a])* $k = (1 << $n::$k as $t)),+ } $($next)* }
+    };
+
+    (@with_from_bits_fn; $(#[$m:meta])* $p:vis enum $n:ident: $t:ty { $($(#[$a:meta])*$k:ident = $v:expr),* $(,)* } $($next:tt)*) => {
+        $crate::flags! { $(#[$m])* $p enum $n: $t { $($(#[$a])* $k = $v),* } $($next)* }
+
+        impl $n {
             #[inline]
             pub const fn from_bits(bits: $t) -> Option<Self> {
                 match bits {
@@ -1454,7 +1466,6 @@ macro_rules! flags {
                 }
             }
         }
+    }
 
-        $crate::flags! { $($next)* }
-    };
 }
